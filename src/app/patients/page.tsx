@@ -1,43 +1,45 @@
-"use client";
-import { useEffect, useState } from "react";
-import { FHIR } from "@/lib/fhir-client";
-import { Patient, FhirBundle } from "@/lib/types";
+'use client'
+import React, { useEffect } from 'react'
+import useSWR from 'swr'
+import PatientCard from '../../components/PatientCard'
+import { fetchPatients } from '../../lib/ehrService'
+import useDebounce from '../hooks/useDebounce' 
+import { useRouter } from 'next/navigation'
 
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const token = typeof window !== "undefined" ? localStorage.getItem("ehr_token") || "" : "";
+  const router = useRouter()
+  const [q, setQ] = React.useState<string>('')
+  const debounced = useDebounce<string>(q, 300)
 
-  async function load() {
-    const res: FhirBundle<Patient> = await FHIR.patients.list(token);
-    setPatients(res.entry?.map((e) => e.resource) || []);
-  }
+  // Redirect to login if no token
+  useEffect(() => {
+    if (!localStorage.getItem('token')) {
+      router.push('/login')
+    }
+  }, [router])
 
-  useEffect(() => { load(); }, []);
+  const { data: patients, isValidating } = useSWR(['patients', debounced], () => fetchPatients(debounced))
 
   return (
     <div>
-      <h1>Patients</h1>
-      <button
-        onClick={async () => {
-          await FHIR.patients.create(token, {
-            resourceType: "Patient",
-            name: [{ family: "Doe", given: ["John"] }],
-            gender: "male",
-            birthDate: "1990-01-01",
-          });
-          load();
-        }}
-      >
-        ➕ Add
-      </button>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Patients</h1>
+        <a className="bg-indigo-600 text-white px-3 py-1 rounded" href="/patients/new">Add Patient</a>
+      </div>
 
-      <ul>
-        {patients.map((p) => (
-          <li key={p.id}>
-            {p.name?.[0]?.given?.join(" ")} {p.name?.[0]?.family}
-          </li>
-        ))}
-      </ul>
+      <div className="mb-4">
+        <input
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          className="w-full border p-2 rounded"
+          placeholder="Search by name, id or phone"
+        />
+      </div>
+
+      <div className="space-y-3">
+        {isValidating && !patients ? <div>Loading...</div> : patients?.map(p => <PatientCard key={p._id} patient={p} />)}
+        {patients?.length === 0 && <div>No results</div>}
+      </div>
     </div>
-  );
+  )
 }

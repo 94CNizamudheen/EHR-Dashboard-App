@@ -1,26 +1,35 @@
 "use client";
-import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 
 export default function CallbackPage() {
-  const params = useSearchParams();
-  const code = params.get("code");
+  const [status, setStatus] = useState("Exchanging code...");
 
   useEffect(() => {
-    if (code) {
-      fetch("/api/auth", {
-        method: "POST",
-        body: JSON.stringify({ code }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.access_token) {
-            localStorage.setItem("ehr_token", data.access_token);
-            window.location.href = "/";
-          }
-        });
-    }
-  }, [code]);
+    async function exchangeCode() {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      if (!code) {
+        setStatus("No authorization code found");
+        return;
+      }
 
-  return <p>Processing login...</p>;
+      const res = await fetch("/api/auth/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+
+      const data = await res.json();
+      if (data.access_token) {
+        localStorage.setItem("oracle_token", data.access_token);
+        setStatus("Token acquired ✅ You can now access patients/appointments.");
+      } else {
+        setStatus("Failed to get token: " + JSON.stringify(data));
+      }
+    }
+    exchangeCode();
+  }, []);
+
+  return <div>{status}</div>;
 }

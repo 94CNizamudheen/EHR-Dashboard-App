@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { FHIR } from "@/lib/fhir-client";
+import { FHIR } from "@/lib/ehrService";
 import { Observation, FhirBundle } from "@/lib/types";
 
 export default function ClinicalPage() {

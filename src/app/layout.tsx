@@ -1,28 +1,28 @@
-import './globals.css'
-import Sidebar from '../components/Sidebar' 
-import Topbar from '../components/TopBar' 
-import { AuthProvider } from './context/AuthContext' 
-import React from 'react'
+import type { Metadata } from "next";
+import "./global.css";
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
 
-export const metadata = {
-  title: 'EHR Dashboard',
-  description: 'Electronic Health Records Dashboard'
-}
+export const metadata: Metadata = {
+  title: "EHR Dashboard",
+  description: "Electronic Health Records System",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <AuthProvider>
-          <div className="flex h-screen">
-            <Sidebar />
-            <div className="flex-1 flex flex-col">
-              <Topbar />
-              <main className="p-6 overflow-auto">{children}</main>
-            </div>
-          </div>
-        </AuthProvider>
+      <body className="min-h-screen flex bg-gray-50 text-gray-900">
+        {/* Sidebar */}
+        <Sidebar />
+
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <Header />
+
+          {/* Main content */}
+          <main className="p-6 flex-1 overflow-y-auto">{children}</main>
+        </div>
       </body>
     </html>
-  )
+  );
 }

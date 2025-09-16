@@ -1,45 +1,71 @@
-'use client'
-import React, { useEffect } from 'react'
-import useSWR from 'swr'
-import PatientCard from '../../components/PatientCard'
-import { fetchPatients } from '../../lib/ehrService'
-import useDebounce from '../hooks/useDebounce' 
-import { useRouter } from 'next/navigation'
+"use client";
+
+import { useEffect, useState } from "react";
+import { API } from "../../lib/api";
+import type { Patient } from "@/types/types";
+import Link from "next/link";
+import CreatePatientModal from "../../components/CreatePatientModal";
 
 export default function PatientsPage() {
-  const router = useRouter()
-  const [q, setQ] = React.useState<string>('')
-  const debounced = useDebounce<string>(q, 300)
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [q, setQ] = useState("");
 
-  // Redirect to login if no token
+
+
   useEffect(() => {
-    if (!localStorage.getItem('token')) {
-      router.push('/login')
-    }
-  }, [router])
-
-  const { data: patients, isValidating } = useSWR(['patients', debounced], () => fetchPatients(debounced))
+    const fetchPatients = async () => {
+      try {
+        const res = await API.get<Patient[]>("/patients", { params: { q } });
+        setPatients(res.data);
+      } catch (err) {
+        console.error("Error fetching patients", err);
+      }
+    };
+    fetchPatients()
+  }, [q, setPatients]);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Patients</h1>
-        <a className="bg-indigo-600 text-white px-3 py-1 rounded" href="/patients/new">Add Patient</a>
+    <div className="">
+      <div className="flex items-center justify-between mb-4 ">
+        <h1 className="text-2xl font-semibold ">Patient Management</h1>
+
+        <CreatePatientModal onCreated={(p) => setPatients((prev) => [p, ...prev])} />
       </div>
 
-      <div className="mb-4">
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+        }}
+        className="flex gap-2 mb-4"
+      >
         <input
           value={q}
-          onChange={e => setQ(e.target.value)}
-          className="w-full border p-2 rounded"
-          placeholder="Search by name, id or phone"
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search by name, phone, or email"
+          className="border px-3 py-2 rounded w-full"
         />
-      </div>
+        <button className="px-4 py-2 bg-blue-600 text-white rounded">Search</button>
+      </form>
 
-      <div className="space-y-3">
-        {isValidating && !patients ? <div>Loading...</div> : patients?.map(p => <PatientCard key={p._id} patient={p} />)}
-        {patients?.length === 0 && <div>No results</div>}
+      {/* Patient list */}
+      <div className="bg-white rounded shadow divide-y">
+        {patients.map((p) => (
+          <Link
+            key={p._id}
+            href={`/patients/${p._id}`}
+            className="flex justify-between px-4 py-3 hover:bg-gray-50"
+          >
+            <span>
+              {p.firstName} {p.lastName} ({p.gender})
+            </span>
+            <span className="text-sm text-gray-500">{p.contact.phone}</span>
+          </Link>
+        ))}
+        {patients.length === 0 && (
+          <div className="p-4 text-gray-500">No patients found</div>
+        )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,52 +1,25 @@
-'use client'
-import useSWR from 'swr'
-import { getAppointments, fetchPatients } from '../lib/ehrService'
-import PatientCard from '../components/PatientCard' 
-import Link from 'next/link'
-import React from 'react'
+import Link from "next/link";
 
-export default function Page() {
-  const { data: patients } = useSWR('patients-summary', () => fetchPatients())
-  const { data: apts } = useSWR('appointments', getAppointments)
-
+export default function DashboardPage() {
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-4">EHR Dashboard</h1>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2">
-          <section className="bg-white rounded shadow p-4">
-            <h2 className="text-lg font-medium mb-2">Upcoming Appointments</h2>
-            <ul>
-              {apts?.slice(0, 6).map(a => (
-                <li key={a.id} className="py-2 border-b">
-                  <div className="flex justify-between">
-                    <div>
-                      <div className="font-medium">{a.reason}</div>
-                      <div className="text-sm text-gray-500">{new Date(a.dateTime).toLocaleString()}</div>
-                    </div>
-                    <div className="text-sm text-gray-600">Status: {a.status}</div>
-                  </div>
-                </li>
-              )) ?? <li>Loading appointments...</li>}
-            </ul>
-            <div className="mt-3">
-              <Link href="/appointments" className="text-indigo-600">View all appointments →</Link>
-            </div>
-          </section>
-        </div>
+      <h1 className="text-3xl font-semibold mb-4">Welcome to EHR Dashboard</h1>
 
-        <div>
-          <section className="bg-white rounded shadow p-4">
-            <h2 className="text-lg font-medium mb-2">Patients</h2>
-            <div className="space-y-2">
-              {patients?.slice(0, 5).map(p => <PatientCard key={p._id} patient={p} />) ?? <div>Loading patients...</div>}
-            </div>
-            <div className="mt-3">
-              <Link href="/patients" className="text-indigo-600">Manage patients →</Link>
-            </div>
-          </section>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card href="/patients" title="Patient Management" desc="Create / View patients" />
+        <Card href="/appointments" title="Appointment Scheduling" desc="Manage appointments" />
+        <Card href="/clinical" title="Clinical Operations" desc="Clinical workflows & notes" />
+        <Card href="/billing" title="Billing & Administrative" desc="Invoices & payments" />
       </div>
     </div>
-  )
+  );
+}
+
+function Card({ href, title, desc }: { href: string; title: string; desc: string }) {
+  return (
+    <Link href={href} className="block p-4 rounded-lg border hover:shadow bg-white">
+      <h3 className="font-medium">{title}</h3>
+      <p className="text-sm text-gray-600 mt-2">{desc}</p>
+    </Link>
+  );
 }

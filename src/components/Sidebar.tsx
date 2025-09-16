@@ -1,16 +1,26 @@
-import Link from 'next/link'
-import React from 'react'
+"use client";
+
+import Link from "next/link";
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-white border-r p-4">
-      <div className="text-xl font-bold mb-6">EHR</div>
+    <div className="p-6">
+      <h1 className="text-2xl font-semibold mb-6">EHR Dashboard</h1>
       <nav className="space-y-2">
-        <Link href="/" className="block p-2 rounded hover:bg-gray-100">Dashboard</Link>
-        <Link href="/patients" className="block p-2 rounded hover:bg-gray-100">Patients</Link>
-        <Link href="/appointments" className="block p-2 rounded hover:bg-gray-100">Appointments</Link>
-        <Link href="/settings" className="block p-2 rounded hover:bg-gray-100">Settings</Link>
+        <NavItem href="/">Dashboard</NavItem>
+        <NavItem href="/patients">Patient Management</NavItem>
+        <NavItem href="/appointments">Appointments</NavItem>
+        <NavItem href="/clinical">Clinical</NavItem>
+        <NavItem href="/billing">Billing</NavItem>
       </nav>
-    </aside>
-  )
+    </div>
+  );
+}
+
+function NavItem({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="block rounded-md px-3 py-2 hover:bg-gray-100">
+      {children}
+    </Link>
+  );
 }

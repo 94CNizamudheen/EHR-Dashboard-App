@@ -1,38 +1,191 @@
-'use client'
-import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { getPatientById, updatePatient } from '../../../lib/ehrService'
-import { Patient } from '../../../types/types'
-import PatientForm from '../../../components/PatientForm' 
+"use client";
 
-interface Props {
-  params: { id: string }
-}
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import {API} from "../../../lib/api";
+import type { Patient } from "@/types/types";
 
-export default function PatientDetail({ params }: Props) {
-  const { id } = params
-  const [patient, setPatient] = useState<Patient | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-  const router = useRouter()
+export default function PatientDetailsPage() {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const id = params.id;
+
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
-    getPatientById(id).then(p => { setPatient(p ?? null); setLoading(false) })
-  }, [id])
+    const fetchPatient = async () => {
+      try {
+        const res = await API.get<Patient>(`/patients/${id}`);
+        setPatient(res.data);
+      } catch (err) {
+        console.error("Error fetching patient", err);
+      }
+    };
+    if (id) fetchPatient();
+  }, [id]);
 
-  async function handleSave(updated: Patient) {
-    setLoading(true)
-    await updatePatient(id, updated)
-    setLoading(false)
-    router.push('/patients')
-  }
+  const handleChange = (field: string, value: string) => {
+    if (!patient) return;
+    setPatient({ ...patient, [field]: value });
+  };
 
-  if (loading) return <div>Loading...</div>
-  if (!patient) return <div>Patient not found</div>
+  const handleContactChange = (field: string, value: string) => {
+    if (!patient) return;
+    setPatient({ ...patient, contact: { ...patient.contact, [field]: value } });
+  };
+
+  const handleUpdate = async () => {
+    if (!patient) return;
+    try {
+      const res = await API.put<Patient>(`/patients/${id}`, patient);
+      setPatient(res.data);
+      setEditing(false);
+    } catch (err) {
+      console.error("Error updating patient", err);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Delete this patient?")) return;
+    try {
+      await API.delete(`/patients/${id}`);
+      router.push("/patients");
+    } catch (err) {
+      console.error("Error deleting patient", err);
+    }
+  };
+
+  if (!patient) return <div>Loading...</div>;
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-4">{patient.firstName} {patient.lastName}</h1>
-      <PatientForm patient={patient} onSave={handleSave} />
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-semibold">
+          {patient.firstName} {patient.lastName}
+        </h1>
+        <button
+          onClick={handleDelete}
+          className="px-3 py-1 bg-red-600 text-white rounded"
+        >
+          Delete
+        </button>
+      </div>
+
+      {/* Demographics */}
+      <div className="space-y-4 bg-white p-4 rounded shadow mb-6">
+        <h2 className="font-medium">Demographics</h2>
+
+        {editing ? (
+          <div className="space-y-2">
+            <input
+              value={patient.firstName}
+              onChange={(e) => handleChange("firstName", e.target.value)}
+              className="border px-2 py-1 rounded w-full"
+              placeholder="First name"
+            />
+            <input
+              value={patient.lastName}
+              onChange={(e) => handleChange("lastName", e.target.value)}
+              className="border px-2 py-1 rounded w-full"
+              placeholder="Last name"
+            />
+            <input
+              value={patient.dob}
+              onChange={(e) => handleChange("dob", e.target.value)}
+              className="border px-2 py-1 rounded w-full"
+              placeholder="Date of birth"
+            />
+            <select
+              value={patient.gender}
+              onChange={(e) => handleChange("gender", e.target.value)}
+              className="border px-2 py-1 rounded w-full"
+            >
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+
+            <input
+              value={patient.contact.phone}
+              onChange={(e) => handleContactChange("phone", e.target.value)}
+              className="border px-2 py-1 rounded w-full"
+              placeholder="Phone"
+            />
+            <input
+              value={patient.contact.email}
+              onChange={(e) => handleContactChange("email", e.target.value)}
+              className="border px-2 py-1 rounded w-full"
+              placeholder="Email"
+            />
+            <input
+              value={patient.contact.address}
+              onChange={(e) => handleContactChange("address", e.target.value)}
+              className="border px-2 py-1 rounded w-full"
+              placeholder="Address"
+            />
+          </div>
+        ) : (
+          <>
+            <p>DOB: {patient.dob}</p>
+            <p>Gender: {patient.gender}</p>
+            <p>Phone: {patient.contact.phone}</p>
+            <p>Email: {patient.contact.email}</p>
+            <p>Address: {patient.contact.address}</p>
+          </>
+        )}
+      </div>
+
+      {/* Other cards */}
+      <Card title="Allergies" items={patient.allergies} />
+      <Card title="Medical Conditions" items={patient.conditions} />
+      <Card title="Medications" items={patient.medications} />
+      <Card title="Immunizations" items={patient.immunizations} />
+
+      {/* Actions */}
+      <div className="mt-4 flex gap-2">
+        {editing ? (
+          <>
+            <button
+              onClick={handleUpdate}
+              className="px-4 py-2 bg-blue-600 text-white rounded"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setEditing(false)}
+              className="px-4 py-2 border rounded"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setEditing(true)}
+            className="px-4 py-2 border rounded"
+          >
+            Edit
+          </button>
+        )}
+      </div>
     </div>
-  )
+  );
+}
+
+function Card({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="space-y-2 bg-white p-4 rounded shadow mb-6">
+      <h2 className="font-medium">{title}</h2>
+      {items.length > 0 ? (
+        <ul className="list-disc list-inside text-sm text-gray-700">
+          {items.map((i) => (
+            <li key={i}>{i}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-gray-500 text-sm">No records</p>
+      )}
+    </div>
+  );
 }

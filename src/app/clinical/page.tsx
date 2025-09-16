@@ -20,6 +20,7 @@ export default function ClinicalPage() {
 
   useEffect(() => {
     fetchPatients();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

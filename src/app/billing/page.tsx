@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {API} from "../../lib/api";
 import Link from "next/link";
 
+
 export default function BillingOverview() {
 
   const [summary, setSummary] = useState<{ totalRevenue: number; totalOutstanding: number } | null>(null);
@@ -42,11 +43,11 @@ export default function BillingOverview() {
         <div className="bg-white p-4 rounded shadow">
           <h3 className="font-medium">Quick actions</h3>
           <ul className="mt-2 text-sm">
-            <li><Link href="/billing/new-payment" className="text-blue-600">Record Payment</Link></li>
+            <li><Link href="/billing/new-record" className="text-blue-600">Record new Payment</Link></li>
+            <li><Link href="/billing/new-action" className="text-blue-600">Pay/Action Payment</Link></li>
           </ul>
         </div>
-      </div>
-
+      </div> 
     </div>
   );
 }

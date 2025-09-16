@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {API} from "../../../lib/api";
 import { useRouter } from "next/navigation";
-import type { Patient } from "@/types/types";
+import type { Patient, BillingCode } from "@/types/types";
 
 export default function NewAppointmentPage() {
   const router = useRouter();
@@ -14,6 +14,20 @@ export default function NewAppointmentPage() {
   const [reason, setReason] = useState("");
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(false);
+  const [codes, setCodes] = useState<BillingCode[]>([]);
+  const [selectedCode, setSelectedCode] = useState<string>("");
+
+  useEffect(() => {
+    const fetchCodes = async () => {
+      try {
+        const res = await API.get<BillingCode[]>("/billing/codes");
+        setCodes(res.data);
+      } catch (err) {
+        console.warn("Unable to load billing codes", err);
+      }
+    };
+    fetchCodes();
+  }, []);
 
   const handleCheckPatient = async () => {
     setLoading(true);
@@ -35,90 +49,69 @@ export default function NewAppointmentPage() {
       return;
     }
     try {
-      await API.post("/appointments", {
+      setLoading(true);
+      const payload = {
         phone,
         provider,
         date,
         time,
         reason,
-      });
+        billingCode: selectedCode || undefined,
+      };
+      const res = await API.post("/appointments", payload);
+      const {  charge } = res.data as { charge?: BillingCode | null };
+      if (charge) {
+        alert(`Appointment booked. Charge added: ${charge.code} (${charge.amount})`);
+      } else {
+        alert("Appointment booked.");
+      }
       router.push("/appointments");
     } catch (err) {
       alert("Error booking appointment: " + (err as Error).message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-4">Book New Appointment</h1>
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-4 bg-white p-6 rounded shadow"
-      >
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow">
         {/* Patient mobile */}
         <div className="flex gap-2">
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Patient mobile number"
-            className="border px-3 py-2 rounded w-full"
-            required
-          />
-          <button
-            type="button"
-            onClick={handleCheckPatient}
-            className="px-3 py-2 bg-blue-600 text-white rounded"
-          >
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Patient mobile number" className="border px-3 py-2 rounded w-full" required />
+          <button type="button" onClick={handleCheckPatient} className="px-3 py-2 bg-blue-600 text-white rounded">
             {loading ? "Checking..." : "Check"}
           </button>
         </div>
-        {patient ? (
-          <p className="text-green-600">
-            Patient found: {patient.firstName} {patient.lastName}
-          </p>
-        ) : (
-          phone && <p className="text-red-600">No patient record found</p>
-        )}
+
+        {patient ? <p className="text-green-600">Patient found: {patient.firstName} {patient.lastName}</p> : phone && <p className="text-red-600">No patient record found</p>}
 
         {/* Provider */}
-        <input
-          value={provider}
-          onChange={(e) => setProvider(e.target.value)}
-          placeholder="Provider name"
-          className="border px-3 py-2 rounded w-full"
-          required
-        />
+        <input value={provider} onChange={(e) => setProvider(e.target.value)} placeholder="Provider name" className="border px-3 py-2 rounded w-full" required />
 
         {/* Date */}
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="border px-3 py-2 rounded w-full"
-          required
-        />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border px-3 py-2 rounded w-full" required />
 
         {/* Time */}
-        <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          className="border px-3 py-2 rounded w-full"
-          required
-        />
+        <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border px-3 py-2 rounded w-full" required />
 
+        {/* Billing code selector */}
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Billing code (optional)</label>
+          <select value={selectedCode} onChange={(e) => setSelectedCode(e.target.value)} className="border px-3 py-2 rounded w-full">
+            <option value="">— No charge / choose code —</option>
+            {codes.map((c) => (
+              <option key={c._id} value={c.code}>
+                {c.code} — {c.description} ({c.amount})
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Reason (optional)"
-          className="border px-3 py-2 rounded w-full"
-        />
+        <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (optional)" className="border px-3 py-2 rounded w-full" />
 
-        <button
-          type="submit"
-          className="px-4 py-2 bg-green-600 text-white rounded"
-        >
+        <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded" disabled={loading}>
           Book Appointment
         </button>
       </form>

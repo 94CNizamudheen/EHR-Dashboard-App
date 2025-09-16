@@ -76,12 +76,12 @@ export type BillingCode = {
   amount: number;        
   active?: boolean;
 };
-
+export type PaymentMethod="cash" | "card" | "insurance" | "other"
 export type PaymentRecord = {
   _id?: string;
   patientId: string;
   amount: number;
-  method: "cash" | "card" | "insurance" | "other";
+  method: PaymentMethod;
   date: string;           
   note?: string;
 };

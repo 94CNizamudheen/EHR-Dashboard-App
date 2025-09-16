@@ -7,21 +7,51 @@ export interface ContactInfo {
 
 export type Gender = "male" | "female" | "other";
 
-export interface Patient {
+export type ClinicalNote = {
+  text: string;
+  author: string;
+  date: string;
+};
+
+export type VitalSigns = {
+  bp?: string;
+  hr?: string;
+  temp?: string;
+  weight?: string;
+  date: string;
+};
+
+export type LabResult = {
+  testName: string;
+  result: string;
+  unit?: string;
+  normalRange?: string;
+  date: string;
+};
+
+export type Encounter = {
+  diagnosis?: string;
+  procedure?: string;
+  notes?: string;
+  provider?: string;
+  date: string; 
+  
+};
+export type Patient = {
   _id: string;
   firstName: string;
   lastName: string;
   dob: string;
-  gender: Gender;
+  gender: "male" | "female" | "other";
   contact: ContactInfo;
   allergies: string[];
   conditions: string[];
   medications: string[];
   immunizations: string[];
-  notes: Record<string, unknown>[];   
-  vitals: Record<string, unknown>[];
-  labs: Record<string, unknown>[];
-  encounters: Record<string, unknown>[];
+  notes: ClinicalNote[];
+  vitals: VitalSigns[];
+  labs: LabResult[];
+  encounters: Encounter[];
 }
 export type AppointmentStatus =
   | "scheduled"
@@ -37,4 +67,29 @@ export type Appointment = {
   time: string;
   reason?: string;
   status: AppointmentStatus;
+};
+
+export type BillingCode = {
+  _id?: string;
+  code: string;           
+  description: string;
+  amount: number;        
+  active?: boolean;
+};
+
+export type PaymentRecord = {
+  _id?: string;
+  patientId: string;
+  amount: number;
+  method: "cash" | "card" | "insurance" | "other";
+  date: string;           
+  note?: string;
+};
+
+export type BillingAccount = {
+  _id?: string;
+  patientId: string;
+  balance: number;        // outstanding balance (positive = patient owes)
+  charges: { code: string; description?: string; amount: number; date: string }[];
+  payments: PaymentRecord[];
 };

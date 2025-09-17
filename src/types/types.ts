@@ -105,3 +105,23 @@ export type Charge = {
   amount: number;
   date: string;
 };
+export type ID = string;
+
+export type Payment = {
+  amount: number;
+  method: string;
+  date: string; // ISO
+  note?: string;
+};
+
+export type History = {
+  payments: Payment[];
+  appointments: Appointment[];
+};
+
+export type BillingCharge = {
+  code?: string;
+  description?: string;
+  amount: number;
+  date: string;
+};

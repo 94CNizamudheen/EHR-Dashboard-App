@@ -1,24 +1,18 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 export default function Header() {
-  const router = useRouter();
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    router.push("/login");
-  };
-
   return (
-    <header className="flex items-center justify-between px-6 py-4 border-b bg-white">
-      <h2 className="text-lg font-medium">EHR Portal</h2>
-      <button
-        onClick={handleLogout}
-        className="px-3 py-1 rounded-md border hover:bg-gray-50 text-sm"
-      >
-        Logout
-      </button>
+    <header
+      className="fixed top-0 left-0 right-0 z-40 h-16"
+      style={{
+        backdropFilter: "blur(6px)",
+        borderBottom: "1px solid var(--hospital-border)",
+        background: "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03))",
+      }}
+    >
+      <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-center">
+        <div className="text-sm font-medium text-[var(--hospital-text)]">EHR • Hospital</div>
+      </div>
     </header>
   );
 }

@@ -89,7 +89,19 @@ export type PaymentRecord = {
 export type BillingAccount = {
   _id?: string;
   patientId: string;
-  balance: number;        // outstanding balance (positive = patient owes)
+  balance: number;      
   charges: { code: string; description?: string; amount: number; date: string }[];
   payments: PaymentRecord[];
+};
+export type ReportSummary = {
+  totalRevenue: number;
+  totalOutstanding: number;
+  accountsCount?: number;
+};
+
+export type Charge = {
+  code?: string;
+  description?: string;
+  amount: number;
+  date: string;
 };

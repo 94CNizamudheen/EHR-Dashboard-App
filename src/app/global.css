@@ -1,6 +1,19 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+:root {
+  --hospital-bg: #071327;        /* deep navy */
+  --hospital-surface: #0d1b2a;   /* slightly lighter panel */
+  --hospital-muted: #122433;     /* muted surfaces / hover */
+  --hospital-border: #16324a;    /* borders */
+  --hospital-primary: #06b6d4;   /* teal/cyan accent */
+  --hospital-accent: #ffb703;    /* warm accent for highlights */
+  --hospital-text: #e6f6fb;      /* main text */
+  --hospital-subtle: #9fb7c6;    /* secondary text */
+}
 
-html, body, #__next { height: 100%; }
-body { background: #f8fafc; }
+html, body {
+  background-color: var(--hospital-bg);
+  color: var(--hospital-text);
+  min-height: 100%;
+}

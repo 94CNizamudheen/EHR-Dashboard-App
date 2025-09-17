@@ -1,27 +1,18 @@
-import type { Metadata } from "next";
 import "./global.css";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
-
-export const metadata: Metadata = {
-  title: "EHR Dashboard",
-  description: "Electronic Health Records System",
-};
+import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen flex bg-gray-50 text-gray-900">
-        {/* Sidebar */}
+      <body style={{ background: "var(--hospital-bg)", color: "var(--hospital-text)" }}>
+        <Header />
         <Sidebar />
-
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <Header />
-
-          {/* Main content */}
-          <main className="p-6 flex-1 overflow-y-auto">{children}</main>
-        </div>
+        <main className="pt-16">
+          <div className="max-w-[1200px] mx-auto px-6">
+            <div className="md:ml-[260px]">{children}</div>
+          </div>
+        </main>
       </body>
     </html>
   );

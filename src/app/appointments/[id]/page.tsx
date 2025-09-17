@@ -1,12 +1,9 @@
-
-
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {API} from "../../../lib/api";
-import  { Appointment } from "@/types/types";
+import { API } from "../../../lib/api";
+import { Appointment } from "@/types/types";
 
 export default function AppointmentDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -69,74 +66,85 @@ export default function AppointmentDetailsPage() {
     }
   };
 
-  if (!appt) return <div>Loading...</div>;
+  const getStatusClasses = (status: string) => {
+    switch (status) {
+      case "scheduled":
+        return "bg-[var(--hospital-primary)]/20 text-[var(--hospital-primary)]";
+      case "completed":
+        return "bg-green-500/20 text-green-400";
+      case "cancelled":
+        return "bg-red-500/20 text-red-400";
+      default:
+        return "bg-yellow-500/20 text-yellow-400";
+    }
+  };
+
+  if (!appt) return <div className="text-[var(--hospital-subtle)]">Loading...</div>;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold">Appointment Details</h1>
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">Appointment Details</h1>
         <span
-          className={`px-2 py-1 rounded text-sm ${
-            appt.status === "scheduled"
-              ? "bg-blue-100 text-blue-700"
-              : appt.status === "completed"
-              ? "bg-green-100 text-green-700"
-              : appt.status === "cancelled"
-              ? "bg-red-100 text-red-700"
-              : "bg-yellow-100 text-yellow-700"
-          }`}
+          className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusClasses(
+            appt.status
+          )}`}
         >
           {appt.status}
         </span>
       </div>
 
-      <div className="space-y-4 bg-white p-4 rounded shadow">
+      {/* Card */}
+      <div className="space-y-4 bg-[var(--hospital-surface)] p-6 rounded-xl shadow-lg border border-[var(--hospital-border)]">
         {/* Patient info */}
-        <p>
-          <strong>Patient:</strong>{" "}
-          {typeof appt.patient === "string"
-            ? appt.patient
-            : `${appt.patient.firstName} ${appt.patient.lastName} (${appt.patient.contact.phone})`}
-        </p>
+        <div className="pb-4 border-b border-[var(--hospital-border)]">
+          <p className="font-semibold text-lg">Patient</p>
+          <p className="text-[var(--hospital-subtle)]">
+            {typeof appt.patient === "string"
+              ? appt.patient
+              : `${appt.patient.firstName} ${appt.patient.lastName} (${appt.patient.contact.phone})`}
+          </p>
+        </div>
 
         {editing ? (
           <>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <input
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="border px-2 py-1 rounded w-full"
+                className="input"
               />
               <input
                 type="time"
                 value={form.time}
                 onChange={(e) => setForm({ ...form, time: e.target.value })}
-                className="border px-2 py-1 rounded w-full"
+                className="input"
               />
               <input
                 value={form.provider}
                 onChange={(e) => setForm({ ...form, provider: e.target.value })}
                 placeholder="Provider"
-                className="border px-2 py-1 rounded w-full"
+                className="input"
               />
               <textarea
                 value={form.reason}
                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
                 placeholder="Reason"
-                className="border px-2 py-1 rounded w-full"
+                className="input"
               />
             </div>
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-3 mt-4">
               <button
                 onClick={handleUpdate}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="px-5 py-2.5 rounded-lg font-medium bg-gradient-to-r from-[var(--hospital-primary)] to-cyan-500 text-[var(--hospital-bg)] shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
               >
                 Save
               </button>
               <button
                 onClick={() => setEditing(false)}
-                className="px-4 py-2 border rounded"
+                className="px-5 py-2.5 rounded-lg border border-[var(--hospital-border)] hover:bg-[var(--hospital-muted)] transition"
               >
                 Cancel
               </button>
@@ -144,43 +152,43 @@ export default function AppointmentDetailsPage() {
           </>
         ) : (
           <>
-            <p>
-              <strong>Date:</strong> {appt.date}
-            </p>
-            <p>
-              <strong>Time:</strong> {appt.time}
-            </p>
-            <p>
-              <strong>Provider:</strong> {appt.provider}
-            </p>
-            <p>
-              <strong>Reason:</strong> {appt.reason || "-"}
-            </p>
-
-            <div className="flex gap-2 mt-4">
-              {appt.status === "scheduled" && (
-                <>
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="px-4 py-2 border rounded"
-                  >
-                    Reschedule
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    className="px-4 py-2 bg-red-600 text-white rounded"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleComplete}
-                    className="px-4 py-2 bg-green-600 text-white rounded"
-                  >
-                    Complete
-                  </button>
-                </>
-              )}
+            <div className="space-y-2">
+              <p>
+                <span className="font-semibold">Date:</span> {appt.date}
+              </p>
+              <p>
+                <span className="font-semibold">Time:</span> {appt.time}
+              </p>
+              <p>
+                <span className="font-semibold">Provider:</span> {appt.provider}
+              </p>
+              <p>
+                <span className="font-semibold">Reason:</span> {appt.reason || "-"}
+              </p>
             </div>
+
+            {appt.status === "scheduled" && (
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="px-5 py-2.5 rounded-lg border border-[var(--hospital-border)] hover:bg-[var(--hospital-muted)] transition"
+                >
+                  Reschedule
+                </button>
+                <button
+                  onClick={handleCancel}
+                  className="px-5 py-2.5 rounded-lg font-medium bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleComplete}
+                  className="px-5 py-2.5 rounded-lg font-medium bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                >
+                  Complete
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

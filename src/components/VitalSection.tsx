@@ -1,7 +1,5 @@
-
-
 import { useState } from "react";
-import { API } from "@/lib/api"; 
+import { API } from "@/lib/api";
 import type { VitalSigns } from "@/types/types";
 
 export default function VitalsSection({
@@ -19,7 +17,6 @@ export default function VitalsSection({
 
   const addVitals = async () => {
     if (!id) return;
-    // optional basic validation: at least one value
     if (!bp && !hr && !temp && !weight) return;
 
     const payload: Partial<VitalSigns> = {
@@ -32,8 +29,10 @@ export default function VitalsSection({
     try {
       setSaving(true);
       await API.post(`/clinical/${id}/vitals`, payload);
-      // clear inputs
-      setBp(""); setHr(""); setTemp(""); setWeight("");
+      setBp("");
+      setHr("");
+      setTemp("");
+      setWeight("");
       await onSaved();
     } catch (err) {
       console.error("Error saving vitals", err);
@@ -43,26 +42,46 @@ export default function VitalsSection({
   };
 
   return (
-    <section className="bg-white p-4 rounded shadow mb-4">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="font-medium">Vitals</h2>
+    <section className="bg-[var(--hospital-surface)] p-5 rounded-xl shadow-lg border border-[var(--hospital-border)] mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-[var(--hospital-text)]">
+          Vitals
+        </h2>
         <button
           onClick={addVitals}
           disabled={saving}
-          className="px-3 py-1 bg-green-600 text-white rounded text-sm"
+          className="px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all text-sm disabled:opacity-50"
         >
-          Save
+          {saving ? "Saving..." : "Save"}
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <input value={bp} onChange={(e)=>setBp(e.target.value)} placeholder="BP (e.g. 120/80)" className="border px-2 py-1 rounded" />
-        <input value={hr} onChange={(e)=>setHr(e.target.value)} placeholder="HR (bpm)" className="border px-2 py-1 rounded" />
-        <input value={temp} onChange={(e)=>setTemp(e.target.value)} placeholder="Temp (°C)" className="border px-2 py-1 rounded" />
-        <input value={weight} onChange={(e)=>setWeight(e.target.value)} placeholder="Weight (kg)" className="border px-2 py-1 rounded" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <input
+          value={bp}
+          onChange={(e) => setBp(e.target.value)}
+          placeholder="BP (120/80)"
+          className="input"
+        />
+        <input
+          value={hr}
+          onChange={(e) => setHr(e.target.value)}
+          placeholder="HR (bpm)"
+          className="input"
+        />
+        <input
+          value={temp}
+          onChange={(e) => setTemp(e.target.value)}
+          placeholder="Temp (°C)"
+          className="input"
+        />
+        <input
+          value={weight}
+          onChange={(e) => setWeight(e.target.value)}
+          placeholder="Weight (kg)"
+          className="input"
+        />
       </div>
-
-      {/* Listing is handled by parent patient.notes/vitals render, so not repeated here */}
     </section>
   );
 }

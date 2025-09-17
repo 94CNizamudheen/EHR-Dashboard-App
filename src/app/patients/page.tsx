@@ -5,6 +5,7 @@ import { API } from "@/lib/api";
 import type { Patient } from "@/types/types";
 import Link from "next/link";
 import CreatePatientModal from "@/components/CreatePatientModal";
+import Loading from "@/components/Loading";
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -45,7 +46,7 @@ export default function PatientsPage() {
   };
 
   const filteredCount = useMemo(() => patients.length, [patients]);
-
+  if (loading) return <Loading />
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -64,7 +65,7 @@ export default function PatientsPage() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          void fetchPatients(q); 
+          void fetchPatients(q);
         }}
         className="flex gap-2 mb-4"
       >

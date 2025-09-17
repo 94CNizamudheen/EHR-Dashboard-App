@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { API } from "../../../lib/api";
 import { Appointment } from "@/types/types";
+import Loading from "@/components/Loading";
 
 export default function AppointmentDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -79,7 +80,7 @@ export default function AppointmentDetailsPage() {
     }
   };
 
-  if (!appt) return <div className="text-[var(--hospital-subtle)]">Loading...</div>;
+  if (!appt) return <Loading/>
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

@@ -1,9 +1,8 @@
 "use client";
 
-import {  useState } from "react";
+import { useState } from "react";
 import { API } from "@/lib/api";
 import { BillingAccount, Patient, PaymentMethod } from "@/types/types";
-
 
 export default function NewActionPaymentPage() {
   const [query, setQuery] = useState("");
@@ -13,11 +12,12 @@ export default function NewActionPaymentPage() {
   const [account, setAccount] = useState<BillingAccount | null>(null);
 
   const [amount, setAmount] = useState<number | "">("");
-  const [method, setMethod] = useState<"cash" | "card" | "insurance" | "other">("cash");
+  const [method, setMethod] = useState<PaymentMethod>("cash");
   const [note, setNote] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const searchPatients = async () => {
     if (!query.trim()) return;
@@ -25,25 +25,28 @@ export default function NewActionPaymentPage() {
       setLoading(true);
       const res = await API.get<Patient[]>(`/patients/search?q=${encodeURIComponent(query)}`);
       setPatients(res.data);
+      setSelectedPatient(null);
+      setAccount(null);
     } catch (err) {
       console.error("Search failed", err);
     } finally {
       setLoading(false);
     }
   };
+
   const fetchAccount = async (id: string) => {
     try {
       const res = await API.get<BillingAccount>(`/billing/account/${id}`);
       setAccount(res.data);
-    } catch (err) {
-      console.error("Could not fetch account", err);
+    } catch {
       setAccount(null);
     }
   };
 
   const handlePayment = async () => {
-    if (!selectedPatient) return alert("Select a patient first");
-    if (amount === "" || Number(amount) <= 0) return alert("Enter a valid amount");
+    setError(null);
+    if (!selectedPatient) return setError("Select a patient first");
+    if (amount === "" || Number(amount) <= 0) return setError("Enter a valid positive amount");
 
     try {
       setLoading(true);
@@ -53,55 +56,64 @@ export default function NewActionPaymentPage() {
         note: note.trim() || undefined,
       });
 
-      setMessage("Payment recorded successfully");
+      setMessage("✅ Payment recorded successfully");
+      setError(null);
       setAmount("");
       setNote("");
       await fetchAccount(selectedPatient._id);
     } catch (err) {
       console.error("Error recording payment", err);
-      alert("Failed to record payment");
+      setError("Failed to record payment");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-4">Pay / Action Payment</h1>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight text-[var(--hospital-text)]">
+        Pay / Action Payment
+      </h1>
 
       {/* search */}
-      <div className="bg-white p-4 rounded shadow mb-4">
-        <h2 className="font-medium mb-2">Search Patient</h2>
+      <div className="bg-[var(--hospital-surface)] border border-[var(--hospital-border)] p-5 rounded-xl shadow-lg">
+        <h2 className="font-medium mb-3">Search Patient</h2>
         <div className="flex gap-2">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or phone"
-            className="border px-3 py-2 rounded flex-1"
+            className="input flex-1"
           />
           <button
             onClick={searchPatients}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded"
+            className="input-action bg-gradient-to-r from-[var(--hospital-primary)] to-cyan-500 text-[var(--hospital-bg)] rounded-2xl p-2"
           >
-            Search
+            {loading ? "Searching..." : "Search"}
           </button>
         </div>
 
-        {patients.length > 0 && (
-          <ul className="mt-3 border rounded divide-y text-sm">
+        {/* multiple results */}
+        {patients.length > 0 && !selectedPatient && (
+          <ul className="mt-3 border border-[var(--hospital-border)] rounded divide-y divide-[var(--hospital-border)] text-sm">
             {patients.map((p) => (
               <li
                 key={p._id}
-                onClick={() => {
-                  setSelectedPatient(p);
-                  fetchAccount(p._id);
-                }}
-                className={`px-3 py-2 cursor-pointer hover:bg-blue-50 ${
-                  selectedPatient?._id === p._id ? "bg-blue-100" : ""
-                }`}
+                className="px-3 py-2 flex justify-between items-center hover:bg-[var(--hospital-muted)] transition"
               >
-                {p.firstName} {p.lastName} — {p.contact?.phone ?? "—"}
+                <span>
+                  {p.firstName} {p.lastName} — {p.contact?.phone ?? "—"}
+                </span>
+                <button
+                  onClick={() => {
+                    setSelectedPatient(p);
+                    fetchAccount(p._id);
+                  }}
+                  className="input-action  bg-gradient-to-r from-[var(--hospital-accent)] to-amber-400 text-[var(--hospital-bg)] text-xs px-3 py-1 border rounded-2xl "
+                >
+                  Select
+                </button>
               </li>
             ))}
           </ul>
@@ -110,18 +122,32 @@ export default function NewActionPaymentPage() {
 
       {/* payment section */}
       {selectedPatient && account && (
-        <div className="bg-white p-4 rounded shadow mb-4">
-          <h2 className="font-medium mb-2">
-            Record Payment for {selectedPatient.firstName} {selectedPatient.lastName}
-          </h2>
+        <div className="bg-[var(--hospital-surface)] border border-[var(--hospital-border)] p-5 rounded-xl shadow-lg space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium">
+              Record Payment for {selectedPatient.firstName} {selectedPatient.lastName}
+            </h2>
+            <button
+              onClick={() => {
+                setSelectedPatient(null);
+                setAccount(null);
+              }}
+              className="input-action bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-3 py-1 rounded-2xl p-2"
+            >
+              Deselect
+            </button>
+          </div>
 
-          <p className="text-sm text-gray-600 mb-3">
-            Current Balance: <span className="font-semibold">{account.balance.toFixed(2)}</span>
+          <p className="text-sm text-[var(--hospital-subtle)]">
+            Current Balance:{" "}
+            <span className="font-semibold text-[var(--hospital-text)]">
+              {account.balance.toFixed(2)}
+            </span>
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Amount</label>
+              <label className="block text-sm text-[var(--hospital-subtle)] mb-1">Amount</label>
               <input
                 value={amount}
                 onChange={(e) => {
@@ -133,42 +159,51 @@ export default function NewActionPaymentPage() {
                   }
                 }}
                 placeholder="e.g. 500.00"
-                className="border px-3 py-2 rounded w-full"
+                className="input w-full"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Method</label>
-              <select
-                value={method}
-                onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-                className="border px-3 py-2 rounded w-full"
-              >
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="insurance">Insurance</option>
-                <option value="other">Other</option>
-              </select>
+              <label className="block text-sm text-[var(--hospital-subtle)] mb-1">Method</label>
+              <div className="select-wrapper">
+                <select
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+                  className="input w-full"
+                >
+                  <option value="cash">Cash</option>
+                  <option value="card">Card</option>
+                  <option value="insurance">Insurance</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className="mt-3">
-            <label className="block text-sm text-gray-600 mb-1">Note (optional)</label>
+          <div>
+            <label className="block text-sm text-[var(--hospital-subtle)] mb-1">Note (optional)</label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="border px-3 py-2 rounded w-full"
+              className="input w-full"
               rows={2}
             />
           </div>
 
-          <div className="mt-4 flex justify-end">
+          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {message && (
+            <div className="px-3 py-2 bg-green-100 text-green-800 rounded text-sm">
+              {message}
+            </div>
+          )}
+
+          <div className="flex justify-end">
             <button
               onClick={handlePayment}
               disabled={loading}
-              className="px-4 py-2 bg-green-600 text-white rounded"
+              className="input-action bg-gradient-to-r from-[var(--hospital-accent)] rounded-2xl p-2 to-amber-400 text-[var(--hospital-bg)]"
             >
-              Confirm Payment
+              {loading ? "Processing..." : "Confirm Payment"}
             </button>
           </div>
         </div>
@@ -176,22 +211,29 @@ export default function NewActionPaymentPage() {
 
       {/* past payments */}
       {account && account.payments.length > 0 && (
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="font-medium mb-2">Past Payments</h2>
-          <ul className="text-sm divide-y">
-            {account.payments.slice().reverse().map((p, i) => (
-              <li key={i} className="py-1 flex justify-between">
-                <span>
-                  {p.date.slice(0, 10)} — {p.method} {p.note ? `(${p.note})` : ""}
-                </span>
-                <span>{p.amount.toFixed(2)}</span>
-              </li>
-            ))}
+        <div className="bg-[var(--hospital-surface)] border border-[var(--hospital-border)] p-5 rounded-xl shadow-lg">
+          <h2 className="font-medium mb-3">Past Payments</h2>
+          <ul className="text-sm divide-y divide-[var(--hospital-border)]">
+            {account.payments
+              .slice()
+              .reverse()
+              .map((p, i) => (
+                <li
+                  key={i}
+                  className={`py-2 flex justify-between ${
+                    i % 2 === 0 ? "bg-[var(--hospital-muted)]/50" : ""
+                  } px-2 rounded`}
+                >
+                  <span>
+                    {p.date.slice(0, 10)} — {p.method}{" "}
+                    {p.note ? `(${p.note})` : ""}
+                  </span>
+                  <span className="font-medium">{p.amount.toFixed(2)}</span>
+                </li>
+              ))}
           </ul>
         </div>
       )}
-
-      {message && <div className="mt-3 px-3 py-2 bg-green-100 text-green-800 rounded">{message}</div>}
     </div>
   );
 }

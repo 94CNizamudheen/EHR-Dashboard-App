@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {API} from "@/lib/api";
 import type { Patient } from "@/types/types";
+import Loading from "./Loading";
 
 export default function CreatePatientModal({ onCreated }: { onCreated: (p: Patient) => void }) {
   const [open, setOpen] = useState(false);
@@ -21,7 +22,7 @@ export default function CreatePatientModal({ onCreated }: { onCreated: (p: Patie
   const [conditions, setConditions] = useState("");
   const [medications, setMedications] = useState("");
   const [immunizations, setImmunizations] = useState("");
-
+ const [loading,setLoading]=useState(false)
   function resetForm() {
     setFirstName("");
     setLastName("");
@@ -38,6 +39,7 @@ export default function CreatePatientModal({ onCreated }: { onCreated: (p: Patie
   }
 
   async function handleCreate(e?: React.FormEvent) {
+    setLoading(true)
     e?.preventDefault();
     setError(null);
 
@@ -67,13 +69,13 @@ export default function CreatePatientModal({ onCreated }: { onCreated: (p: Patie
       setOpen(false);
     } catch (err: unknown) {
       console.error("Create patient error", err);
-      // best-effort message
       setError((err as Error)?.message ?? "Unable to create patient");
     } finally {
       setSubmitting(false);
+      setLoading(false)
     }
   }
-
+  if(loading) return <Loading/>
   return (
     <>
       <button onClick={() => setOpen(true)} className="px-4 py-2 bg-green-600 text-white rounded">

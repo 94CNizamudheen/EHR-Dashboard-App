@@ -168,8 +168,6 @@ export default function ClinicalDetailPage() {
         }
     };
 
-    // ---------- billing: create charge from clinical page ----------
-
     const handleCreateCharge = async () => {
         if (!id) return;
         if (!selectedCode && (manualAmount === "" || Number(manualAmount) <= 0)) {
@@ -210,28 +208,42 @@ export default function ClinicalDetailPage() {
     if (!patient) return <div>Loading...</div>;
 
     return (
-        <div>
-            <div className="flex items-start justify-between mb-4 gap-4">
+        <div className="max-w-5xl mx-auto space-y-6">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-6 gap-4">
                 <div>
-                    <h1 className="text-2xl font-semibold">
+                    <h1 className="text-3xl font-bold tracking-tight text-[var(--hospital-text)]">
                         Clinical Records: {patient.firstName} {patient.lastName}
                     </h1>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="text-sm text-[var(--hospital-subtle)] mt-1">
                         {patient.contact?.phone ?? "—"} • DOB: {patient.dob}
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                     {/* Billing summary */}
-                    <div className="bg-white border rounded px-3 py-2 text-sm text-right">
+                    <div className="bg-[var(--hospital-surface)] border border-[var(--hospital-border)] rounded-xl px-4 py-3 text-sm text-right shadow-md">
                         <div className="font-medium">Balance</div>
-                        <div className="text-lg">{billingAccount ? billingAccount.balance.toFixed(2) : "0.00"}</div>
-                        <div className="text-xs text-gray-500 mt-1">{billingAccount ? `${billingAccount.charges.length} charges` : "no account"}</div>
+                        <div className="text-lg font-semibold text-[var(--hospital-text)]">
+                            {billingAccount ? billingAccount.balance.toFixed(2) : "0.00"}
+                        </div>
+                        <div className="text-xs text-[var(--hospital-subtle)] mt-1">
+                            {billingAccount
+                                ? `${billingAccount.charges.length} charges`
+                                : "no account"}
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {savedMessage && <div className="px-3 py-1 rounded bg-green-100 text-green-800 text-sm">{savedMessage}</div>}
-                        <button onClick={handleComplete} className="px-4 py-2 bg-blue-600 text-white rounded">
+                        {savedMessage && (
+                            <div className="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-sm">
+                                {savedMessage}
+                            </div>
+                        )}
+                        <button
+                            onClick={handleComplete}
+                            className="px-5 py-2.5 rounded-lg font-medium bg-gradient-to-r from-[var(--hospital-primary)] to-cyan-500 text-[var(--hospital-bg)] shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                        >
                             Complete
                         </button>
                     </div>
@@ -239,46 +251,54 @@ export default function ClinicalDetailPage() {
             </div>
 
             {/* Notes */}
-            <section className="bg-white p-4 rounded shadow mb-4">
-                <h2 className="font-medium mb-2">Clinical Notes</h2>
+            <section className="bg-[var(--hospital-surface)] p-5 rounded-xl shadow-lg border border-[var(--hospital-border)]">
+                <h2 className="font-semibold mb-3 text-lg">Clinical Notes</h2>
 
-                <ul className="text-sm text-gray-700 space-y-1">
+                <ul className="text-sm space-y-1">
                     {patient.notes.length > 0 ? (
                         patient.notes.map((n: ClinicalNote, i: number) => (
                             <li key={i}>
                                 <span className="font-semibold">{n.author}</span>: {n.text}{" "}
-                                <span className="text-gray-400 text-xs">({n.date})</span>
+                                <span className="text-[var(--hospital-subtle)] text-xs">
+                                    ({n.date})
+                                </span>
                             </li>
                         ))
                     ) : (
-                        <li className="text-gray-500">No notes</li>
+                        <li className="text-[var(--hospital-subtle)]">No notes</li>
                     )}
                 </ul>
 
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-4">
                     <input
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
                         placeholder="Add note..."
-                        className="border px-2 py-1 rounded flex-1"
+                        className="input flex-1"
                     />
-                    <button onClick={addNote} disabled={loading} className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-50">
+                    <button
+                        onClick={addNote}
+                        disabled={loading}
+                        className="px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-[var(--hospital-primary)] to-cyan-500 text-[var(--hospital-bg)] shadow-md hover:shadow-lg disabled:opacity-50"
+                    >
                         Save
                     </button>
                 </div>
             </section>
 
             {/* Billing: Create Charge */}
-            <section className="bg-white p-4 rounded shadow mb-4">
-                <h2 className="font-medium mb-2">Create Charge</h2>
+            <section className="bg-[var(--hospital-surface)] p-5 rounded-xl shadow-lg border border-[var(--hospital-border)]">
+                <h2 className="font-semibold mb-3 text-lg">Create Charge</h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label className="block text-sm text-gray-600 mb-1">Billing code (optional)</label>
+                        <label className="block text-sm text-[var(--hospital-subtle)] mb-1">
+                            Billing code (optional)
+                        </label>
                         <select
                             value={selectedCode}
                             onChange={(e) => setSelectedCode(e.target.value)}
-                            className="border px-3 py-2 rounded w-full"
+                            className="input"
                         >
                             <option value="">— choose code —</option>
                             {codes.map((c) => (
@@ -290,7 +310,9 @@ export default function ClinicalDetailPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm text-gray-600 mb-1">Manual amount (optional)</label>
+                        <label className="block text-sm text-[var(--hospital-subtle)] mb-1">
+                            Manual amount (optional)
+                        </label>
                         <input
                             value={manualAmount}
                             onChange={(e) => {
@@ -302,18 +324,17 @@ export default function ClinicalDetailPage() {
                                 }
                             }}
                             placeholder="e.g. 150.00"
-                            className="border px-3 py-2 rounded w-full"
+                            className="input"
                         />
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-[var(--hospital-subtle)] mt-1">
                             If a code is selected, that code&apos;s amount will be used. Otherwise provide an amount.
                         </div>
                     </div>
                 </div>
 
-                {/* Pending charge confirmation */}
                 {(selectedCode || manualAmount) && (
-                    <div className="mt-4 p-3 border rounded bg-yellow-50 flex justify-between items-center">
-                        <div className="text-sm">
+                    <div className="mt-4 p-3 border border-[var(--hospital-border)] rounded-lg bg-yellow-500/10 flex justify-between items-center">
+                        <div className="text-sm text-[var(--hospital-text)]">
                             {selectedCode
                                 ? `Selected code: ${selectedCode}`
                                 : `Manual amount: ${manualAmount}`}
@@ -321,50 +342,50 @@ export default function ClinicalDetailPage() {
                         <button
                             onClick={handleCreateCharge}
                             disabled={loading}
-                            className="px-4 py-1 bg-green-600 text-white rounded disabled:opacity-50"
+                            className="px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md hover:shadow-lg disabled:opacity-50"
                         >
                             Confirm Charge
                         </button>
                     </div>
                 )}
-
-                {/* recent charges preview */}
-                <div className="mt-4">
-                    <h3 className="text-sm font-medium mb-2">Recent charges</h3>
-                    {billingAccount && billingAccount.charges.length > 0 ? (
-                        <ul className="text-sm space-y-1">
-                            {billingAccount.charges
-                                .slice()
-                                .reverse()
-                                .slice(0, 6)
-                                .map((c, i) => (
-                                    <li key={i} className="flex justify-between">
-                                        <span>
-                                            {c.date.slice(0, 10)} — {c.code ?? "manual"} — {c.description ?? "-"}
-                                        </span>
-                                        <span>{c.amount.toFixed(2)}</span>
-                                    </li>
-                                ))}
-                        </ul>
-                    ) : (
-                        <div className="text-gray-500 text-sm">No charges yet</div>
-                    )}
-                </div>
             </section>
 
+            {/* Editable lists, vitals, labs, encounters will inherit the same theme */}
+            <EditableListSection
+                title="Medications"
+                items={medications}
+                setItems={setMedications}
+                onSave={saveMedications}
+                loading={loading}
+            />
+            <EditableListSection
+                title="Allergies"
+                items={allergies}
+                setItems={setAllergies}
+                onSave={saveAllergies}
+                loading={loading}
+            />
+            <EditableListSection
+                title="Medical Conditions"
+                items={conditions}
+                setItems={setConditions}
+                onSave={saveConditions}
+                loading={loading}
+            />
+            <EditableListSection
+                title="Immunizations"
+                items={immunizations}
+                setItems={setImmunizations}
+                onSave={saveImmunizations}
+                loading={loading}
+            />
 
-            {/* Editable Lists */}
-            <EditableListSection title="Medications" items={medications} setItems={setMedications} onSave={saveMedications} loading={loading} />
-            <EditableListSection title="Allergies" items={allergies} setItems={setAllergies} onSave={saveAllergies} loading={loading} />
-            <EditableListSection title="Medical Conditions" items={conditions} setItems={setConditions} onSave={saveConditions} loading={loading} />
-            <EditableListSection title="Immunizations" items={immunizations} setItems={setImmunizations} onSave={saveImmunizations} loading={loading} />
-
-            {/* Vitals / Labs / Encounters components (these call onSaved to refresh) */}
             <VitalsSection id={id} onSaved={fetchPatient} />
             <LabsSection id={id} onSaved={fetchPatient} />
             <EncountersSection id={id} onSaved={fetchPatient} />
         </div>
     );
+
 }
 
 /** EditableListSection (no single-add server call) */
@@ -395,38 +416,54 @@ function EditableListSection({
     };
 
     return (
-        <section className="bg-white p-4 rounded shadow mb-4">
-            <div className="flex items-center justify-between mb-2">
-                <h2 className="font-medium">{title}</h2>
-                <button onClick={onSave} disabled={loading} className="px-3 py-1 bg-green-600 text-white rounded disabled:opacity-50 text-sm">
+        <section className="bg-[var(--hospital-surface)] p-5 rounded-xl shadow-lg border border-[var(--hospital-border)] mb-4">
+            <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold">{title}</h2>
+                <button
+                    onClick={onSave}
+                    disabled={loading}
+                    className="px-4 py-1 rounded-lg font-medium bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md hover:shadow-lg disabled:opacity-50 text-sm"
+                >
                     Save
                 </button>
             </div>
 
-            <ul className="text-sm text-gray-700 space-y-1">
+            <ul className="text-sm space-y-1">
                 {items.length > 0 ? (
                     items.map((m, i) => (
-                        <li key={i} className="flex items-center justify-between">
+                        <li
+                            key={i}
+                            className="flex items-center justify-between border-b border-[var(--hospital-border)] py-1"
+                        >
                             <span>{m}</span>
-                            <button onClick={() => handleRemove(i)} className="text-red-500 text-xs px-2 py-0.5 rounded hover:bg-red-50">
+                            <button
+                                onClick={() => handleRemove(i)}
+                                className="text-red-400 text-xs px-2 py-0.5 rounded hover:bg-red-500/10"
+                            >
                                 remove
                             </button>
                         </li>
                     ))
                 ) : (
-                    <li className="text-gray-500">No records</li>
+                    <li className="text-[var(--hospital-subtle)]">No records</li>
                 )}
             </ul>
 
             <div className="flex gap-2 mt-3">
-                <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={`Add ${title.toLowerCase()}...`} className="border px-2 py-1 rounded flex-1" />
-                <button onClick={handleAdd} className="px-3 py-1 bg-blue-600 text-white rounded">
+                <input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder={`Add ${title.toLowerCase()}...`}
+                    className="input flex-1"
+                />
+                <button
+                    onClick={handleAdd}
+                    className="px-3 py-1 rounded-lg font-medium bg-gradient-to-r from-[var(--hospital-primary)] to-cyan-500 text-[var(--hospital-bg)] shadow-md hover:shadow-lg"
+                >
                     Add
-                </button>
-                <button onClick={onSave} disabled={loading} className="px-3 py-1 bg-green-600 text-white rounded disabled:opacity-50">
-                    Save
                 </button>
             </div>
         </section>
+
     );
 }

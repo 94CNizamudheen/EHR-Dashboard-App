@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { API } from "@/lib/api";
 import type { Patient, Appointment, BillingAccount, ReportSummary, Charge } from "@/types/types";
+import Loading from "@/components/Loading";
 
 
 
@@ -132,7 +133,7 @@ export default function DashboardPage() {
     all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return all.slice(0, 6);
   }, [accounts]);
-
+  if(loading) return <Loading/>
   return (
     <div>
       <div className="flex items-center justify-between mb-6">

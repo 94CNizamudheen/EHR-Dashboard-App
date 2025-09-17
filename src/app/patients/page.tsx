@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { API } from "@/lib/api";
 import type { Patient } from "@/types/types";
 import Link from "next/link";
@@ -12,14 +12,12 @@ export default function PatientsPage() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debounceMs] = useState(() => 350);
-  const [trigger, setTrigger] = useState(0);
 
-  async function fetchPatients(query: string) {
+  async function fetchPatients() {
     try {
       setLoading(true);
       setError(null);
-      const res = await API.get<Patient[]>("/patients", { params: { q: query } });
+      const res = await API.get<Patient[]>("/patients", { params: { q } });
       setPatients(res.data);
     } catch (err) {
       console.error("Error fetching patients", err);
@@ -28,58 +26,51 @@ export default function PatientsPage() {
       setLoading(false);
     }
   }
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setTrigger((s) => s + 1);
-    }, debounceMs);
-    return () => clearTimeout(t);
-  }, [q, debounceMs]);
 
+  // Load all patients once initially
   useEffect(() => {
-    void fetchPatients(q);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trigger]);
+    void fetchPatients();
+  }, []);
 
   // callback for created patient (prepend)
   const handleCreated = (p: Patient) => {
     setPatients((prev) => [p, ...prev]);
   };
 
-  const filteredCount = useMemo(() => patients.length, [patients]);
-  if (loading) return <Loading />
+  if (loading) return <Loading />;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-semibold">Patient Management</h1>
-          <div className="text-sm text-[var(--hospital-subtle)] mt-1">Total: {filteredCount}</div>
+          <div className="text-sm text-[var(--hospital-subtle)] mt-1">
+            Total: {patients.length}
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div>
-            <CreatePatientModal onCreated={handleCreated} />
-          </div>
+        <div>
+          <CreatePatientModal onCreated={handleCreated} />
         </div>
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-        }}
-        className="flex gap-2 mb-4"
-      >
+      {/* Search input + button */}
+      <div className="flex gap-3 mb-4">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by name, phone, or email"
-          className="input w-full"
-          aria-label="Search patients"
+          placeholder="Search by name, phone, email..."
+          className="input flex-1"
         />
-        <button type="submit" className="px-4 py-2 bg-primary text-primary-foreground rounded">
+        <button
+          onClick={fetchPatients}
+          className="px-5 py-2.5 rounded-lg font-medium bg-gradient-to-r from-[var(--hospital-primary)] to-cyan-500 text-[var(--hospital-bg)] shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+        >
           Search
         </button>
-      </form>
+      </div>
 
+      {/* Patients list */}
       <div className="bg-[var(--hospital-surface)] rounded shadow divide-y border border-[var(--hospital-border)]">
         {loading && (
           <div className="p-4 text-sm text-[var(--hospital-subtle)]">Loading patients…</div>
@@ -93,19 +84,26 @@ export default function PatientsPage() {
           <div className="p-6 text-sm text-[var(--hospital-subtle)]">No patients found</div>
         )}
 
-        {!loading && patients.map((p) => (
-          <Link
-            key={p._id}
-            href={`/patients/${p._id}`}
-            className="flex justify-between px-4 py-3 hover:bg-[var(--hospital-muted)]"
-          >
-            <div>
-              <div className="font-medium">{p.firstName} {p.lastName}</div>
-              <div className="text-xs text-[var(--hospital-subtle)]">{p.contact.email ?? "—"} • DOB: {p.dob}</div>
-            </div>
-            <div className="text-sm text-[var(--hospital-subtle)]">{p.contact.phone}</div>
-          </Link>
-        ))}
+        {!loading &&
+          patients.map((p) => (
+            <Link
+              key={p._id}
+              href={`/patients/${p._id}`}
+              className="flex justify-between px-4 py-3 hover:bg-[var(--hospital-muted)]"
+            >
+              <div>
+                <div className="font-medium">
+                  {p.firstName} {p.lastName}
+                </div>
+                <div className="text-xs text-[var(--hospital-subtle)]">
+                  {p.contact.email ?? "—"} • DOB: {p.dob}
+                </div>
+              </div>
+              <div className="text-sm text-[var(--hospital-subtle)]">
+                {p.contact.phone}
+              </div>
+            </Link>
+          ))}
       </div>
     </div>
   );

@@ -1,6 +1,12 @@
 import "./global.css";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import { Metadata } from "next";
+export const metadata: Metadata = {
+  title: "Hospital EHR Dashboard",
+  description: "A secure Electronic Health Record management dashboard",
+  keywords: ["EHR", "Hospital", "Dashboard", "Healthcare"],
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

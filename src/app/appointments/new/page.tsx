@@ -57,15 +57,25 @@ export default function NewAppointmentPage() {
   // Form validation
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+
     if (!selectedPatient) newErrors.patient = "Please select a patient";
-    if (provider.trim().length < 3)
+
+    if (provider.trim().length < 3) {
       newErrors.provider = "Provider name must be at least 3 characters";
+    }
+
     if (!date) newErrors.date = "Date is required";
     if (!time) newErrors.time = "Time is required";
+
     if (date && time) {
       const chosen = new Date(`${date}T${time}`);
-      if (chosen < new Date())
+      if (chosen < new Date()) {
         newErrors.time = "Appointment must be in the future";
+      }
+    }
+
+    if (reason && reason.trim().length > 0 && reason.trim().length < 5) {
+      newErrors.reason = "Reason must be at least 5 characters if provided";
     }
 
     setErrors(newErrors);
@@ -84,7 +94,7 @@ export default function NewAppointmentPage() {
         provider,
         date,
         time,
-        reason,
+        reason: reason.trim() || undefined,
         billingCode: selectedCode || undefined,
       };
       const res = await API.post("/appointments", payload);
@@ -178,7 +188,6 @@ export default function NewAppointmentPage() {
             onChange={(e) => setProvider(e.target.value)}
             placeholder="Provider name"
             className={`input ${errors.provider ? "input--error" : ""}`}
-            required
           />
           {errors.provider && (
             <p className="text-red-500 text-sm mt-1">{errors.provider}</p>
@@ -192,7 +201,6 @@ export default function NewAppointmentPage() {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             className={`input ${errors.date ? "input--error" : ""}`}
-            required
           />
           {errors.date && (
             <p className="text-red-500 text-sm mt-1">{errors.date}</p>
@@ -206,7 +214,6 @@ export default function NewAppointmentPage() {
             value={time}
             onChange={(e) => setTime(e.target.value)}
             className={`input ${errors.time ? "input--error" : ""}`}
-            required
           />
           {errors.time && (
             <p className="text-red-500 text-sm mt-1">{errors.time}</p>
@@ -235,12 +242,17 @@ export default function NewAppointmentPage() {
         </div>
 
         {/* Reason */}
-        <textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Reason (optional)"
-          className="input"
-        />
+        <div>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Reason (optional)"
+            className={`input ${errors.reason ? "input--error" : ""}`}
+          />
+          {errors.reason && (
+            <p className="text-red-500 text-sm mt-1">{errors.reason}</p>
+          )}
+        </div>
 
         {/* Submit */}
         <button

@@ -19,6 +19,7 @@ export default function AppointmentDetailsPage() {
     provider: "",
     reason: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchAppt = async () => {
@@ -38,7 +39,34 @@ export default function AppointmentDetailsPage() {
     if (id) fetchAppt();
   }, [id]);
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (form.provider.trim().length < 3) {
+      newErrors.provider = "Provider name must be at least 3 characters";
+    }
+    if (!form.date) {
+      newErrors.date = "Date is required";
+    }
+    if (!form.time) {
+      newErrors.time = "Time is required";
+    }
+    if (form.date && form.time) {
+      const chosen = new Date(`${form.date}T${form.time}`);
+      if (chosen < new Date()) {
+        newErrors.time = "Appointment must be in the future";
+      }
+    }
+    if (form.reason && form.reason.trim().length > 0 && form.reason.trim().length < 5) {
+      newErrors.reason = "Reason must be at least 5 characters if provided";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleUpdate = async () => {
+    if (!validateForm()) return;
+
     try {
       const res = await API.put<Appointment>(`/appointments/${id}`, form);
       setAppt(res.data);
@@ -80,7 +108,7 @@ export default function AppointmentDetailsPage() {
     }
   };
 
-  if (!appt) return <Loading/>
+  if (!appt) return <Loading />;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -111,31 +139,51 @@ export default function AppointmentDetailsPage() {
         {editing ? (
           <>
             <div className="space-y-3">
-              <input
-                type="date"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="input"
-              />
-              <input
-                type="time"
-                value={form.time}
-                onChange={(e) => setForm({ ...form, time: e.target.value })}
-                className="input"
-              />
-              <input
-                value={form.provider}
-                onChange={(e) => setForm({ ...form, provider: e.target.value })}
-                placeholder="Provider"
-                className="input"
-              />
-              <textarea
-                value={form.reason}
-                onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                placeholder="Reason"
-                className="input"
-              />
+              {/* Date */}
+              <div>
+                <input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  className={`input ${errors.date ? "input--error" : ""}`}
+                />
+                {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+              </div>
+
+              {/* Time */}
+              <div>
+                <input
+                  type="time"
+                  value={form.time}
+                  onChange={(e) => setForm({ ...form, time: e.target.value })}
+                  className={`input ${errors.time ? "input--error" : ""}`}
+                />
+                {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time}</p>}
+              </div>
+
+              {/* Provider */}
+              <div>
+                <input
+                  value={form.provider}
+                  onChange={(e) => setForm({ ...form, provider: e.target.value })}
+                  placeholder="Provider"
+                  className={`input ${errors.provider ? "input--error" : ""}`}
+                />
+                {errors.provider && <p className="text-red-500 text-sm mt-1">{errors.provider}</p>}
+              </div>
+
+              {/* Reason */}
+              <div>
+                <textarea
+                  value={form.reason}
+                  onChange={(e) => setForm({ ...form, reason: e.target.value })}
+                  placeholder="Reason"
+                  className={`input ${errors.reason ? "input--error" : ""}`}
+                />
+                {errors.reason && <p className="text-red-500 text-sm mt-1">{errors.reason}</p>}
+              </div>
             </div>
+
             <div className="flex gap-3 mt-4">
               <button
                 onClick={handleUpdate}

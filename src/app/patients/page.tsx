@@ -65,7 +65,6 @@ export default function PatientsPage() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          void fetchPatients(q);
         }}
         className="flex gap-2 mb-4"
       >

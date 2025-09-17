@@ -2,6 +2,6 @@
 import axios from "axios";
 
 export const API = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_EHR_BASE_URL,
+  baseURL: process.env.NEXT_PUBLIC_EHR_BASE_URL||'http://localhost:1996' ,
   withCredentials: true,
 });
